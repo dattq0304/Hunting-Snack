@@ -12,6 +12,7 @@ let snake = [
 let food;
 let gameOver = false;
 let score = 0;
+let headDirection = "right";
 
 const startGame = () => {
   food = createFood();
@@ -19,33 +20,42 @@ const startGame = () => {
   const myInterval = setInterval(() => {
     reRender();
     moveSnake();
+    snake[0].d = headDirection; //Change snake's head direction to new direction
 
+    //If the snake hits the food
     if (snake[0].x === food.x && snake[0].y === food.y) {
-      food = createFood();
+      const len = snake.length;
+      food = createFood(); //Create a new food
       expandSnake(
-        { x: snake[0].x, y: snake[0].y, d: snake[0].d },
-        snake.length * 50
+        //Expand the snake
+        {
+          x: snake[0].x,
+          y: snake[0].y,
+          d: headDirection,
+        },
+        len * 50 //The time it takes for each segment to appear
       );
     }
 
+    //If the game is over, stop the game loop and display the end screen
     if (gameOver) {
       drawEndScreen();
       clearInterval(myInterval);
     }
-  }, 50);
+  }, 50); //The game loop runs every 50 milliseconds
 };
 
 const reRender = () => {
-  // console.log("re-render");
+  //Clear the canvas
   context.clearRect(0, 0, canvasWidth, canvasHeight);
 
-  //draw the snake
+  //Draw the snake
   context.fillStyle = "green";
   for (let i = 0; i < snake.length; i++) {
     context.fillRect(snake[i].x, snake[i].y, 10, 10);
   }
 
-  //draw food
+  //Draw the food
   context.fillStyle = "red";
   context.fillRect(food.x, food.y, 10, 10);
 };
@@ -55,7 +65,8 @@ const createFood = () => {
     x: 10 * Math.floor((Math.random() * canvasWidth) / 10),
     y: 10 * Math.floor((Math.random() * canvasHeight) / 10),
   };
-  while(checkSnakeLocation(node)) {
+  while (checkOverlap(node)) {
+    //Make sure the food doesn't overlap with the snake
     node = {
       x: 10 * Math.floor((Math.random() * canvasWidth) / 10),
       y: 10 * Math.floor((Math.random() * canvasHeight) / 10),
@@ -64,13 +75,14 @@ const createFood = () => {
   return node;
 };
 
-const checkSnakeLocation = (node) => {
-  const len = snake.length
-  for(let i = 0; i < len; i++) {
-    if(node.x === snake[i].x && node.y === snake[i].y) return true;
+const checkOverlap = (node) => {
+  const len = snake.length;
+  for (let i = 0; i < len; i++) {
+    //If the food overlaps with a segment of the snake, return true
+    if (node.x === snake[i].x && node.y === snake[i].y) return true;
   }
   return false;
-}
+};
 
 const expandSnake = ({ x, y, d }, time) => {
   setTimeout(() => {
@@ -81,6 +93,7 @@ const expandSnake = ({ x, y, d }, time) => {
 const checkCollision = () => {
   const len = snake.length;
   for (let i = 1; i < len; i++) {
+    //If the head of the snake overlaps with any other segment, the game is over
     if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) {
       gameOver = true;
     } else {
@@ -92,21 +105,19 @@ const checkCollision = () => {
 const moveNode = (i) => {
   switch (snake[i].d) {
     case "left":
-      if ((i === 0 && snake[i].x === 0) || checkCollision()) gameOver = true;
+      if (i === 0 && snake[i].x === 0) gameOver = true;
       else snake[i].x -= 10;
       break;
     case "up":
-      if ((i === 0 && snake[i].y === 0) || checkCollision()) gameOver = true;
+      if (i === 0 && snake[i].y === 0) gameOver = true;
       else snake[i].y -= 10;
       break;
     case "right":
-      if ((i === 0 && snake[i].x === canvasWidth - 10) || checkCollision())
-        gameOver = true;
+      if (i === 0 && snake[i].x === canvasWidth - 10) gameOver = true;
       else snake[i].x += 10;
       break;
     case "down":
-      if ((i === 0 && snake[i].y === canvasHeight - 10) || checkCollision())
-        gameOver = true;
+      if (i === 0 && snake[i].y === canvasHeight - 10) gameOver = true;
       else snake[i].y += 10;
       break;
   }
@@ -114,12 +125,15 @@ const moveNode = (i) => {
 
 const moveSnake = () => {
   const len = snake.length;
-  //Move the snake
+  //Move each segment of the snake
   for (let i = 0; i < len; i++) {
     moveNode(i);
   }
 
   for (let i = len - 1; i !== 0; i--) {
+    //Change direction
+    snake[i].d = snake[i - 1].d;
+
     //Check collision
     if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) {
       gameOver = true;
@@ -127,26 +141,54 @@ const moveSnake = () => {
     } else {
       gameOver = false;
     }
-
-    //Change direction
-    snake[i].d = snake[i - 1].d;
   }
 };
 
 document.addEventListener("keydown", (key) => {
+  // Get the current direction of the snake's head
   let prevD = snake[0].d;
+  // Check which key was pressed
   switch (key.keyCode) {
-    case 37:
-      if (prevD != "right") snake[0].d = "left";
+    case 37: // left arrow
+      // Check that the snake isn't currently moving right (cannot reverse direction)
+      if (prevD != "right") {
+        headDirection = "left";
+      }
       break;
-    case 38:
-      if (prevD != "down") snake[0].d = "up";
+    case 38: // up arrow
+      if (prevD != "down") {
+        headDirection = "up";
+      }
       break;
-    case 39:
-      if (prevD != "left") snake[0].d = "right";
+    case 39: // right arrow
+      if (prevD != "left") {
+        headDirection = "right";
+      }
       break;
-    case 40:
-      if (prevD != "up") snake[0].d = "down";
+    case 40: // down arrow
+      if (prevD != "up") {
+        headDirection = "down";
+      }
+      break;
+    case 65: // "a" key
+      if (prevD != "right") {
+        headDirection = "left";
+      }
+      break;
+    case 87: // "w" key
+      if (prevD != "down") {
+        headDirection = "up";
+      }
+      break;
+    case 68: // "d" key
+      if (prevD != "left") {
+        headDirection = "right";
+      }
+      break;
+    case 83: // "s" key
+      if (prevD != "up") {
+        headDirection = "down";
+      }
       break;
   }
 });
