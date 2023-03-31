@@ -4,7 +4,11 @@ const context = canvas.getContext("2d");
 const canvasWidth = canvas.width;
 const canvasHeight = canvas.height;
 
-let snake = [{ x: 100, y: 190, d: "right" }];
+let snake = [
+  { x: 100, y: 190, d: "right" },
+  { x: 90, y: 190, d: "right" },
+  { x: 80, y: 190, d: "right" },
+];
 let food;
 let gameOver = false;
 let score = 0;
@@ -15,10 +19,8 @@ const startGame = () => {
   const myInterval = setInterval(() => {
     reRender();
     moveSnake();
-    checkCollision();
 
     if (snake[0].x === food.x && snake[0].y === food.y) {
-      score++;
       food = createFood();
       expandSnake(
         { x: snake[0].x, y: snake[0].y, d: snake[0].d },
@@ -34,7 +36,7 @@ const startGame = () => {
 };
 
 const reRender = () => {
-  console.log("re-render");
+  // console.log("re-render");
   context.clearRect(0, 0, canvasWidth, canvasHeight);
 
   //draw the snake
@@ -49,11 +51,26 @@ const reRender = () => {
 };
 
 const createFood = () => {
-  return {
+  let node = {
     x: 10 * Math.floor((Math.random() * canvasWidth) / 10),
     y: 10 * Math.floor((Math.random() * canvasHeight) / 10),
   };
+  while(checkSnakeLocation(node)) {
+    node = {
+      x: 10 * Math.floor((Math.random() * canvasWidth) / 10),
+      y: 10 * Math.floor((Math.random() * canvasHeight) / 10),
+    };
+  }
+  return node;
 };
+
+const checkSnakeLocation = (node) => {
+  const len = snake.length
+  for(let i = 0; i < len; i++) {
+    if(node.x === snake[i].x && node.y === snake[i].y) return true;
+  }
+  return false;
+}
 
 const expandSnake = ({ x, y, d }, time) => {
   setTimeout(() => {
@@ -72,40 +89,48 @@ const checkCollision = () => {
   }
 };
 
-const moveNode = (node) => {
-  switch (node.d) {
+const moveNode = (i) => {
+  switch (snake[i].d) {
     case "left":
-      if (node.x === 0) gameOver = true;
-      else node.x -= 10;
+      if ((i === 0 && snake[i].x === 0) || checkCollision()) gameOver = true;
+      else snake[i].x -= 10;
       break;
     case "up":
-      if (node.y === 0) gameOver = true;
-      else node.y -= 10;
+      if ((i === 0 && snake[i].y === 0) || checkCollision()) gameOver = true;
+      else snake[i].y -= 10;
       break;
     case "right":
-      if (node.x === canvasWidth - 10) gameOver = true;
-      else node.x += 10;
+      if ((i === 0 && snake[i].x === canvasWidth - 10) || checkCollision())
+        gameOver = true;
+      else snake[i].x += 10;
       break;
     case "down":
-      if (node.y === canvasHeight - 10) gameOver = true;
-      else node.y += 10;
+      if ((i === 0 && snake[i].y === canvasHeight - 10) || checkCollision())
+        gameOver = true;
+      else snake[i].y += 10;
       break;
   }
 };
 
 const moveSnake = () => {
   const len = snake.length;
+  //Move the snake
   for (let i = 0; i < len; i++) {
-    moveNode(snake[i]);
+    moveNode(i);
   }
-};
 
-const drawEndScreen = () => {
-  context.fillStyle = "black";
-  context.fillRect(250, 150, 200, 80);
-  context.font = "30px Arial";
-  context.fillStyle = "white";
-  context.fillText(`Score: ${score}`, 290, 190);
+  for (let i = len - 1; i !== 0; i--) {
+    //Check collision
+    if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) {
+      gameOver = true;
+      return;
+    } else {
+      gameOver = false;
+    }
+
+    //Change direction
+    snake[i].d = snake[i - 1].d;
+  }
 };
 
 document.addEventListener("keydown", (key) => {
@@ -124,16 +149,14 @@ document.addEventListener("keydown", (key) => {
       if (prevD != "up") snake[0].d = "down";
       break;
   }
-  changeDirection();
 });
 
-const changeDirection = () => {
-  const len = snake.length;
-  for (let i = 1; i < len; i++) {
-    setTimeout(() => {
-      snake[i].d = snake[0].d;
-    }, 50 * i);
-  }
+const drawEndScreen = () => {
+  context.fillStyle = "black";
+  context.fillRect(250, 150, 200, 80);
+  context.font = "30px Arial";
+  context.fillStyle = "white";
+  context.fillText(`Score: ${snake.length - 3}`, 290, 190);
 };
 
 startGame();
