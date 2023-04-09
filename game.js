@@ -145,6 +145,8 @@ const moveSnake = () => {
 };
 
 document.addEventListener("keydown", (key) => {
+	key.preventDefault();
+	
   // Get the current direction of the snake's head
   let prevD = snake[0].d;
   // Check which key was pressed
