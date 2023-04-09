@@ -105,19 +105,19 @@ const checkCollision = () => {
 const moveNode = (i) => {
   switch (snake[i].d) {
     case "left":
-      if (i === 0 && snake[i].x === 0) gameOver = true;
+      if (i === 0 && snake[i].x < 0) gameOver = true;
       else snake[i].x -= 10;
       break;
     case "up":
-      if (i === 0 && snake[i].y === 0) gameOver = true;
+      if (i === 0 && snake[i].y < 0) gameOver = true;
       else snake[i].y -= 10;
       break;
     case "right":
-      if (i === 0 && snake[i].x === canvasWidth - 10) gameOver = true;
+      if (i === 0 && snake[i].x > canvasWidth - 10) gameOver = true;
       else snake[i].x += 10;
       break;
     case "down":
-      if (i === 0 && snake[i].y === canvasHeight - 10) gameOver = true;
+      if (i === 0 && snake[i].y > canvasHeight - 10) gameOver = true;
       else snake[i].y += 10;
       break;
   }
